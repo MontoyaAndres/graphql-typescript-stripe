@@ -1,17 +1,11 @@
-import { IResolvers } from "graphql-tools";
 import * as bcrypt from "bcryptjs";
 
 import { User } from "./entity/User";
+import { ResolverMap } from "./types/graphql-utils";
 
-export const resolvers: IResolvers = {
+export const resolvers: ResolverMap = {
   Query: {
-    me: (_, __, { req }) => {
-      if (!req.session.userId) {
-        return null;
-      }
-
-      return User.findOne(req.session.userId);
-    }
+    me: (_, __, { session }) => User.findOne(session.userId)
   },
   Mutation: {
     register: async (_, { email, password }) => {
@@ -23,7 +17,7 @@ export const resolvers: IResolvers = {
 
       return true;
     },
-    login: async (_, { email, password }, { req }) => {
+    login: async (_, { email, password }, { session }) => {
       const user = await User.findOne({ where: { email } });
       if (!user) {
         return null;
@@ -34,7 +28,7 @@ export const resolvers: IResolvers = {
         return null;
       }
 
-      req.session.userId = user.id;
+      session.userId = user.id;
 
       return user;
     }

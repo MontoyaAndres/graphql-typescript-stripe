@@ -1,36 +1,54 @@
 import "reflect-metadata";
-import { ApolloServer } from "apollo-server-express";
-import * as express from "express";
+import { GraphQLServer } from "graphql-yoga";
 import * as session from "express-session";
+import * as connectRedis from "connect-redis";
 
 import { typeDefs } from "./typeDefs";
 import { resolvers } from "./resolvers";
 import { createTypeormConn } from "./utils/createTypeormConn";
+import { redis } from "./redis";
+
+const RedisStore = connectRedis(session);
 
 async function startServer() {
-  const server = new ApolloServer({
+  const server = new GraphQLServer({
     typeDefs,
     resolvers,
-    context: ({ req }: any) => req
+    context: ({ request, response }) => ({
+      request,
+      response,
+      session: request ? request.session : undefined
+    })
   });
 
-  await createTypeormConn();
-
-  const app = express();
-
-  app.use(
+  server.express.use(
     session({
+      store: new RedisStore({
+        client: redis as any
+      }),
+      name: "qid",
       secret: "sadasdasda",
       resave: false,
-      saveUninitialized: false
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // only works with https
+        maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
+      }
     })
   );
 
-  server.applyMiddleware({ app }); // App is from an existing express app
+  await createTypeormConn();
 
-  app.listen({ port: 4000 }, () =>
-    console.log(`let's go boy! http://localhost:4000${server.graphqlPath}`)
+  const app = server.start(
+    {
+      port: 4000,
+      cors: { origin: "http://localhost:3000", credentials: true }
+    },
+    () => console.log(`let's go boy! http://localhost:4000/`)
   );
+
+  return app;
 }
 
 startServer();

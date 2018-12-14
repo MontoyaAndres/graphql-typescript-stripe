@@ -1,6 +1,8 @@
 version: "3.7"
 
 services:
+  redis:
+    image: redis:alpine
   db:
     image: postgres
     restart: always
@@ -8,6 +10,7 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "3030:5432"
+    user: "postgres"
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
@@ -20,11 +23,13 @@ services:
       - ./:/stripe-dev
       - /stripe-dev/node_modules
     environment:
-      STRIPE_SECRET: 
+      STRIPE_SECRET:
+      REDIS: redis
     ports:
       - "4000:4000"
     depends_on:
       - db
+      - redis
 
 volumes:
   pgdata:
