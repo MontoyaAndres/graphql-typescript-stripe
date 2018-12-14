@@ -23,7 +23,8 @@ services:
       - ./:/stripe-dev
       - /stripe-dev/node_modules
     environment:
-      STRIPE_SECRET:
+      STRIPE_SECRET: sk_test_kr6I6nb3cNFXUKdRhmgJYOxz
+      PLAN: plan_E9i4cyl3c0pZhs
       REDIS: redis
     ports:
       - "4000:4000"

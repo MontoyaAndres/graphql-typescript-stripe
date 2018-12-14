@@ -2,6 +2,7 @@ import * as bcrypt from "bcryptjs";
 
 import { User } from "./entity/User";
 import { ResolverMap } from "./types/graphql-utils";
+import { stripe } from "./stripe";
 
 export const resolvers: ResolverMap = {
   Query: {
@@ -29,6 +30,30 @@ export const resolvers: ResolverMap = {
       }
 
       session.userId = user.id;
+
+      return user;
+    },
+    createSubscription: async (_, { source }, { session }) => {
+      if (!session.userId) {
+        throw new Error("not authenticated");
+      }
+
+      const user = await User.findOne(session.userId);
+
+      if (!user) {
+        throw new Error();
+      }
+
+      const customer = await stripe.customers.create({
+        email: user.email,
+        source,
+        plan: process.env.PLAN
+      });
+
+      user.stripeId = customer.id;
+      user.type = "premium";
+
+      await user.save();
 
       return user;
     }
