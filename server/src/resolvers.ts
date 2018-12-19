@@ -6,7 +6,7 @@ import { stripe } from "./stripe";
 
 export const resolvers: ResolverMap = {
   Query: {
-    me: (_, __, { session }) => User.findOne(session.userId)
+    me: (_, __, { session }) => User.findOne({ where: { id: session.userId } })
   },
   Mutation: {
     register: async (_, { email, password }) => {
@@ -33,12 +33,12 @@ export const resolvers: ResolverMap = {
 
       return user;
     },
-    createSubscription: async (_, { source }, { session }) => {
+    createSubscription: async (_, { source, ccLast4 }, { session }) => {
       if (!session.userId) {
         throw new Error("not authenticated");
       }
 
-      const user = await User.findOne(session.userId);
+      const user = await User.findOne({ where: { id: session.userId } });
 
       if (!user) {
         throw new Error();
@@ -52,7 +52,26 @@ export const resolvers: ResolverMap = {
 
       user.stripeId = customer.id;
       user.type = "premium";
+      user.ccLast4 = ccLast4;
 
+      await user.save();
+
+      return user;
+    },
+    changeCreditCard: async (_, { source, ccLast4 }, { session }) => {
+      if (!session.userId) {
+        throw new Error("not authenticated");
+      }
+
+      const user = await User.findOne({ where: { id: session.userId } });
+
+      if (!user || !user.stripeId || user.type !== "premium") {
+        throw new Error();
+      }
+
+      await stripe.customers.update(user.stripeId, { source });
+
+      user.ccLast4 = ccLast4;
       await user.save();
 
       return user;
