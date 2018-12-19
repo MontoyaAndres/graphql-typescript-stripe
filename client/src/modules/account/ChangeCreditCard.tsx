@@ -29,8 +29,11 @@ const ChangeCreditCard = () => (
           });
           console.log(response);
         }}
+        panelLabel="Change Card"
         stripeKey={process.env.REACT_APP_STRIPE_PUBLISHABLE!}
-      />
+      >
+        <button>Change credit card</button>
+      </StripeCheckout>
     )}
   </Mutation>
 );

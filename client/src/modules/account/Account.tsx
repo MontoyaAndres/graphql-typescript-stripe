@@ -6,6 +6,7 @@ import { MeQuery } from "../../schemaTypes";
 import SubscribeUser from "./SubscribeUser";
 import { meQuery } from "src/graphql/queries/me";
 import ChangeCreditCard from "./ChangeCreditCard";
+import { CancelSubscription } from "./CancelSubscription";
 
 const Account = () => (
   <Query<MeQuery> fetchPolicy="network-only" query={meQuery}>
@@ -35,6 +36,7 @@ const Account = () => (
         <React.Fragment>
           <div>your current last 4 digits: {data.me.ccLast4}</div>
           <ChangeCreditCard />
+          <CancelSubscription />
         </React.Fragment>
       );
     }}
