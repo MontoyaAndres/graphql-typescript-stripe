@@ -18,7 +18,7 @@
     "@types/ioredis": "4.0.4",
     "@types/node": "10.12.18",
     "@types/stripe": "6.18.0",
-    "nodemon": "1.18.8",
+    "nodemon": "1.18.9",
     "ts-node": "7.0.1",
     "tslint": "5.11.0",
     "tslint-config-prettier": "1.17.0",
